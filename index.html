@@ -1,0 +1,1930 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Support Triage Studio — AI-ready Queue Simulator</title>
+  <link rel="preconnect" href="https://fonts.bunny.net" />
+  <link href="https://fonts.bunny.net/css?family=general-sans:400,500,600,700|jetbrains-mono:400,600" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0a0e17;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.09);
+      --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.18);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --faint: rgba(255,255,255,.46);
+      --good: #46e6b1;
+      --warn: #ffcc66;
+      --bad: #ff5a7a;
+      --accent: #7c5cff;
+      --accent2:#22d3ee;
+      --accent3:#ff2bd6;
+      --shadow: 0 20px 60px rgba(0,0,0,.40);
+      --blur: 16px;
+      --radius: 18px;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: "General Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+      --g1: radial-gradient(1200px 500px at 15% 15%, rgba(124,92,255,.30), transparent 55%),
+            radial-gradient(900px 450px at 85% 10%, rgba(34,211,238,.22), transparent 60%),
+            radial-gradient(1200px 700px at 75% 85%, rgba(255,43,214,.18), transparent 60%),
+            linear-gradient(180deg, rgba(255,255,255,.02), transparent 22%);
+
+      --cta: linear-gradient(135deg, rgba(124,92,255,1), rgba(34,211,238,1));
+      --cta2: linear-gradient(135deg, rgba(255,43,214,1), rgba(124,92,255,1));
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background: var(--bg);
+      background-image: var(--g1);
+      overflow-x:hidden;
+    }
+
+    a{color:inherit}
+    .wrap{max-width:1160px; margin:0 auto; padding:28px 18px 80px;}
+
+    header{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+      margin:10px 0 20px;
+    }
+
+    .brand{
+      display:flex; gap:14px; align-items:flex-start;
+    }
+
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(34,211,238,.85));
+      box-shadow: 0 14px 40px rgba(124,92,255,.25);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:before{
+      content:"";
+      position:absolute; inset:-40px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.8), transparent 40%),
+                  radial-gradient(circle at 70% 75%, rgba(255,255,255,.35), transparent 45%);
+      transform: rotate(18deg);
+      opacity:.55;
+    }
+
+    .title{
+      line-height:1.05;
+      margin:0;
+      font-size: clamp(26px, 3vw, 36px);
+      letter-spacing:-.02em;
+    }
+
+    .subtitle{
+      margin:8px 0 0;
+      color:var(--muted);
+      max-width: 70ch;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .pillbar{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size:12px;
+    }
+    .dot{width:7px; height:7px; border-radius:50%; background: var(--accent2); box-shadow:0 0 0 4px rgba(34,211,238,.12)}
+    .dot.p{background: var(--accent); box-shadow:0 0 0 4px rgba(124,92,255,.12)}
+    .dot.m{background: var(--accent3); box-shadow:0 0 0 4px rgba(255,43,214,.10)}
+
+    .top-actions{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    }
+
+    button, .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      box-shadow: none;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      font-weight:600;
+      font-size:13px;
+      user-select:none;
+    }
+    button:hover,.btn:hover{transform: translateY(-1px); border-color: var(--stroke2); background: rgba(255,255,255,.06)}
+    button:active,.btn:active{transform: translateY(0px) scale(.99)}
+    button.primary{
+      border-color: rgba(124,92,255,.35);
+      background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(34,211,238,.08));
+    }
+    button.cta{
+      border:0;
+      background: var(--cta);
+      color:#071018;
+      box-shadow: 0 18px 50px rgba(124,92,255,.26);
+    }
+    button.cta2{
+      border:0;
+      background: var(--cta2);
+      color:#071018;
+      box-shadow: 0 18px 50px rgba(255,43,214,.18);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      align-items:start;
+      margin-top:16px;
+    }
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr;}
+      header{flex-direction:column; align-items:stretch;}
+      .top-actions{justify-content:flex-start;}
+    }
+
+    .card{
+      border-radius: var(--radius);
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      overflow:hidden;
+      position:relative;
+    }
+
+    .card h2{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.02em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.78);
+    }
+
+    .card .head{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), transparent);
+    }
+
+    .card .body{padding:14px;}
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 980px){
+      .kpis{grid-template-columns: repeat(2, 1fr)}
+    }
+
+    .kpi{
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.15);
+      padding:12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .kpi:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(500px 140px at 20% 10%, rgba(124,92,255,.20), transparent 60%),
+                  radial-gradient(500px 140px at 80% 10%, rgba(34,211,238,.14), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .kpi .label{font-size:12px; color:var(--muted); position:relative;}
+    .kpi .val{font-variant-numeric: tabular-nums lining-nums; font-size:22px; font-weight:800; margin-top:6px; position:relative;}
+    .kpi .sub{font-size:12px; color: var(--faint); margin-top:6px; position:relative;}
+
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .row > *{flex: 1 1 auto;}
+
+    .control-grid{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 540px){
+      .control-grid{grid-template-columns:1fr;}
+    }
+
+    .field{display:flex; flex-direction:column; gap:7px;}
+    .field label{font-size:12px; color:var(--muted)}
+
+    input[type="range"]{width:100%}
+
+    .select, input[type="text"], textarea{
+      width:100%;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      border-radius: 14px;
+      padding:10px 11px;
+      outline:none;
+      font-family: var(--sans);
+      font-size: 13px;
+    }
+
+    textarea{min-height: 84px; resize: vertical; font-family: var(--mono); font-size: 12px; line-height:1.5}
+
+    .help{font-size:12px; color: var(--faint); line-height:1.5}
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 980px){
+      .split{grid-template-columns:1fr;}
+    }
+
+    .queue{
+      display:flex; flex-direction:column; gap:10px;
+      max-height: 420px;
+      overflow:auto;
+      padding-right:4px;
+    }
+
+    .ticket{
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      padding:12px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .ticket:before{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(700px 220px at 15% 0%, rgba(124,92,255,.18), transparent 60%),
+                  radial-gradient(700px 220px at 85% 0%, rgba(34,211,238,.10), transparent 60%);
+      opacity:.85;
+      pointer-events:none;
+    }
+
+    .ticket .main{position:relative;}
+    .ticket .meta{position:relative; display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width: 145px;}
+
+    .t-title{font-weight:800; letter-spacing:-.01em; font-size: 14px; line-height:1.25}
+    .t-desc{font-size:12px; color: var(--muted); margin-top:6px; line-height:1.5}
+
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+    .chip{
+      font-size:11px;
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .chip.good{border-color: rgba(70,230,177,.35); background: rgba(70,230,177,.08); color: rgba(203,255,240,.92)}
+    .chip.warn{border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.08); color: rgba(255,236,188,.92)}
+    .chip.bad{border-color: rgba(255,90,122,.35); background: rgba(255,90,122,.09); color: rgba(255,204,212,.92)}
+    .chip.purple{border-color: rgba(124,92,255,.35); background: rgba(124,92,255,.10); color: rgba(230,224,255,.92)}
+
+    .mini{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+      width: 100%;
+    }
+
+    .btnrow{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;}
+
+    .badge{
+      font-size:11px;
+      padding:6px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.78);
+      font-variant-numeric: tabular-nums;
+      display:inline-flex; gap:8px; align-items:center;
+    }
+
+    .bar{
+      height:10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+
+    .bar > i{display:block; height:100%; width:50%; background: var(--cta); border-radius:999px;}
+
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03); color: var(--muted); cursor:pointer; font-size:12px; user-select:none}
+    .tab.active{border-color: rgba(124,92,255,.35); background: rgba(124,92,255,.12); color: rgba(240,238,255,.94)}
+
+    .divider{height:1px; background: rgba(255,255,255,.08); margin:12px 0;}
+
+    .console{
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+      background: rgba(0,0,0,.30);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 12px;
+      white-space: pre-wrap;
+      color: rgba(225,245,255,.90);
+      min-height: 160px;
+      max-height: 280px;
+      overflow:auto;
+    }
+
+    .footer{
+      margin-top:16px;
+      color: var(--faint);
+      font-size:12px;
+      line-height:1.6;
+    }
+
+    .toast{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      max-width: 420px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 22px 70px rgba(0,0,0,.45);
+      transform: translateY(20px);
+      opacity:0;
+      pointer-events:none;
+      transition: .22s ease;
+    }
+    .toast.show{opacity:1; transform: translateY(0); pointer-events:auto}
+    .toast .t1{font-weight:800; letter-spacing:-.01em}
+    .toast .t2{margin-top:6px; color: var(--muted); font-size:12px; line-height:1.5}
+
+    .kbd{font-family: var(--mono); font-size: 11px; padding: 3px 6px; border-radius: 8px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.85)}
+
+    .hint{display:flex; gap:8px; flex-wrap:wrap; align-items:center; color: var(--faint); font-size:12px}
+
+    @media (prefers-reduced-motion: reduce){
+      *{transition:none !important; scroll-behavior:auto !important}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1 class="title">Support Triage Studio</h1>
+          <p class="subtitle">A queue simulator and policy lab inspired by a recent wave of AI billing/support frustration. Try different triage policies, staff levels, and automation reliability to see how backlog, response times, and customer trust evolve.</p>
+          <div class="pillbar" role="list">
+            <div class="pill" role="listitem"><span class="dot"></span>Queue simulation</div>
+            <div class="pill" role="listitem"><span class="dot p"></span>Policy tuner</div>
+            <div class="pill" role="listitem"><span class="dot m"></span>Trust + risk model</div>
+          </div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="primary" id="btnSeed">New scenario</button>
+        <button class="primary" id="btnImport">Import</button>
+        <button class="primary" id="btnExport">Export</button>
+        <button class="cta" id="btnRun">Run simulation</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-label="Simulation">
+        <div class="head">
+          <h2>Live Dashboard</h2>
+          <div class="hint">
+            <span>Shortcuts:</span>
+            <span class="kbd">R</span> run
+            <span class="kbd">N</span> new
+            <span class="kbd">/</span> focus search
+          </div>
+        </div>
+        <div class="body">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="label">Backlog</div>
+              <div class="val" id="kBacklog">0</div>
+              <div class="sub" id="kBacklogSub">tickets waiting</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Median response</div>
+              <div class="val" id="kMedian">—</div>
+              <div class="sub" id="kMedianSub">hours</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Trust index</div>
+              <div class="val" id="kTrust">—</div>
+              <div class="sub" id="kTrustSub">0–100</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Revenue at risk</div>
+              <div class="val" id="kRisk">—</div>
+              <div class="sub" id="kRiskSub">monthly</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="split">
+            <div>
+              <div class="row" style="justify-content:space-between; align-items:flex-end;">
+                <div>
+                  <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Queue</h2>
+                  <div class="help">Click a ticket to inspect. Use the policy tabs to re-rank the queue. Then run a simulation to see outcomes.</div>
+                </div>
+                <div class="btnrow">
+                  <button id="btnAdd" class="primary">Add ticket</button>
+                  <button id="btnAuto" class="primary">Auto-triage</button>
+                </div>
+              </div>
+              <div style="margin-top:10px" class="row">
+                <input id="search" type="text" placeholder="Search tickets…" />
+                <button id="btnClear" class="primary">Clear</button>
+              </div>
+              <div style="margin-top:10px" class="tabs" role="tablist" aria-label="Triage policy">
+                <div class="tab active" data-policy="balanced" role="tab" tabindex="0">Balanced</div>
+                <div class="tab" data-policy="vip" role="tab" tabindex="0">VIP first</div>
+                <div class="tab" data-policy="rage" role="tab" tabindex="0">Angry customers</div>
+                <div class="tab" data-policy="churn" role="tab" tabindex="0">Churn risk</div>
+                <div class="tab" data-policy="sla" role="tab" tabindex="0">SLA triage</div>
+              </div>
+
+              <div class="queue" id="queue" style="margin-top:12px" aria-label="Ticket list"></div>
+            </div>
+
+            <div>
+              <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Ticket Inspector</h2>
+              <div class="help">A lightweight risk model estimates urgency, sentiment, and billing-criticality, then predicts churn likelihood. Tune the fields and watch the score update.</div>
+              <div class="divider"></div>
+
+              <div class="control-grid">
+                <div class="field">
+                  <label>Customer tier</label>
+                  <select class="select" id="fTier">
+                    <option value="free">Free</option>
+                    <option value="pro">Pro</option>
+                    <option value="team">Team</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Issue type</label>
+                  <select class="select" id="fType">
+                    <option value="billing">Billing</option>
+                    <option value="outage">Outage</option>
+                    <option value="bug">Bug</option>
+                    <option value="security">Security</option>
+                    <option value="feature">Feature request</option>
+                    <option value="account">Account access</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Sentiment (angry → calm)</label>
+                  <input id="fSent" type="range" min="0" max="100" value="45" />
+                </div>
+                <div class="field">
+                  <label>Age in queue (hours)</label>
+                  <input id="fAge" type="range" min="0" max="720" value="24" />
+                </div>
+                <div class="field">
+                  <label>Monthly spend (USD)</label>
+                  <input id="fSpend" type="range" min="0" max="20000" value="120" />
+                </div>
+                <div class="field">
+                  <label>Previous contacts (count)</label>
+                  <input id="fTouches" type="range" min="0" max="12" value="1" />
+                </div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="mini">
+                <div class="kpi" style="box-shadow:none">
+                  <div class="label">Priority score</div>
+                  <div class="val" id="xPriority">—</div>
+                  <div class="sub" id="xPrioritySub">0–100</div>
+                </div>
+                <div class="kpi" style="box-shadow:none">
+                  <div class="label">Churn probability</div>
+                  <div class="val" id="xChurn">—</div>
+                  <div class="sub" id="xChurnSub">next 30 days</div>
+                </div>
+                <div class="kpi" style="box-shadow:none">
+                  <div class="label">SLA breach risk</div>
+                  <div class="val" id="xSla">—</div>
+                  <div class="sub" id="xSlaSub">low/med/high</div>
+                </div>
+                <div class="kpi" style="box-shadow:none">
+                  <div class="label">Automation fit</div>
+                  <div class="val" id="xAuto">—</div>
+                  <div class="sub" id="xAutoSub">routing confidence</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="field">
+                <label>Customer message (editable)</label>
+                <textarea id="fMsg" spellcheck="false"></textarea>
+                <div class="help">Tip: write a short complaint. The app will infer sentiment cues (caps, exclamation, words like "refund", "charged", "cancel") and adjust the model.</div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="btnrow">
+                <button id="btnApply" class="cta2">Apply changes</button>
+                <button id="btnResolve" class="primary">Mark resolved</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="split">
+            <div>
+              <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Policy Lab</h2>
+              <div class="help">Model the operational side: staffing, automation quality, and response cadence. Then run the simulation (7 days) to estimate outcomes.</div>
+              <div class="divider"></div>
+
+              <div class="control-grid">
+                <div class="field">
+                  <label>Agents online</label>
+                  <input id="cAgents" type="range" min="1" max="24" value="6" />
+                  <div class="help"><span id="cAgentsVal"></span> agents</div>
+                </div>
+                <div class="field">
+                  <label>Avg handle time (min)</label>
+                  <input id="cAht" type="range" min="3" max="45" value="14" />
+                  <div class="help"><span id="cAhtVal"></span> minutes per ticket</div>
+                </div>
+                <div class="field">
+                  <label>Automation coverage</label>
+                  <input id="cAutoCov" type="range" min="0" max="80" value="35" />
+                  <div class="help"><span id="cAutoCovVal"></span>% of tickets get auto-routed</div>
+                </div>
+                <div class="field">
+                  <label>Automation reliability</label>
+                  <input id="cAutoRel" type="range" min="40" max="99" value="78" />
+                  <div class="help"><span id="cAutoRelVal"></span>% correct classification</div>
+                </div>
+                <div class="field">
+                  <label>Escalation budget</label>
+                  <input id="cEsc" type="range" min="0" max="40" value="10" />
+                  <div class="help"><span id="cEscVal"></span>% capacity for escalations</div>
+                </div>
+                <div class="field">
+                  <label>After-hours coverage</label>
+                  <input id="cAfter" type="range" min="0" max="100" value="25" />
+                  <div class="help"><span id="cAfterVal"></span>% of normal capacity</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="field">
+                <label>Staffing schedule (per day)</label>
+                <textarea id="cSchedule" spellcheck="false"></textarea>
+                <div class="help">One line per day: <span class="kbd">Mon: 6</span>. This lets you simulate weekends or on-call rotations.</div>
+              </div>
+            </div>
+
+            <div>
+              <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Simulation Log</h2>
+              <div class="help">A step-by-step log of what the simulator did (arrivals, routing, resolutions, breaches). Export this as JSON for sharing.</div>
+              <div class="divider"></div>
+              <div class="console" id="log" aria-label="Simulation log"></div>
+              <div class="divider"></div>
+              <div class="btnrow">
+                <button id="btnCopyLog" class="primary">Copy log</button>
+                <button id="btnDownload" class="primary">Download report</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            Inspired by a wave of AI vendor support complaints. This app is a sandbox, not a real support system: it intentionally simplifies reality to make tradeoffs visible.
+          </div>
+        </div>
+      </section>
+
+      <aside class="card" aria-label="Insights">
+        <div class="head">
+          <h2>Insights</h2>
+          <div class="badge" id="scenarioBadge"><span class="dot"></span><span>Scenario</span><span id="scenarioId" style="opacity:.8">—</span></div>
+        </div>
+        <div class="body">
+          <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">What this is</h2>
+          <p class="help" style="margin-top:10px">
+            A mini lab for “support ops in the AI era”. When demand spikes and billing gets complex, the queue becomes a product experience.
+            This tool shows how different policies can reduce backlog but still harm trust.
+          </p>
+
+          <div class="divider"></div>
+
+          <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Quick experiments</h2>
+          <div class="help" style="margin-top:10px">Try these presets to see dramatic outcomes:</div>
+          <div class="btnrow" style="margin-top:10px; justify-content:flex-start">
+            <button class="primary" data-preset="understaffed">Understaffed</button>
+            <button class="primary" data-preset="autopilot">Autopilot</button>
+            <button class="primary" data-preset="viponly">VIP-only</button>
+            <button class="primary" data-preset="sla">SLA-first</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Outcome meter</h2>
+          <div class="help" style="margin-top:10px">The simulator produces a synthetic scorecard. It’s not “truth”, but it’s consistent and comparable between scenarios.</div>
+
+          <div style="margin-top:12px" class="field">
+            <label>Operational health</label>
+            <div class="bar"><i id="mOps" style="width:50%"></i></div>
+          </div>
+          <div style="margin-top:12px" class="field">
+            <label>Customer trust</label>
+            <div class="bar"><i id="mTrust" style="width:50%; background: var(--cta2)"></i></div>
+          </div>
+          <div style="margin-top:12px" class="field">
+            <label>Revenue protection</label>
+            <div class="bar"><i id="mRev" style="width:50%; background: linear-gradient(135deg, rgba(70,230,177,1), rgba(34,211,238,1))"></i></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Draft post</h2>
+          <div class="help" style="margin-top:10px">Generate a short share text for Twitter/X based on your outcome. No external calls—purely local.</div>
+          <div class="btnrow" style="margin-top:10px; justify-content:flex-start">
+            <button class="cta" id="btnDraft">Generate</button>
+            <button class="primary" id="btnCopyDraft">Copy</button>
+          </div>
+          <div class="divider"></div>
+          <div class="console" id="draft" style="min-height: 120px"></div>
+
+          <div class="divider"></div>
+
+          <h2 style="margin:0; font-size: 13px; text-transform:none; color: rgba(255,255,255,.88)">Source trend</h2>
+          <div class="help" style="margin-top:10px">
+            “I've been waiting over a month for Anthropic to respond to my billing issue”
+            <br />
+            <a href="https://nickvecchioni.github.io/thoughts/2026/04/08/anthropic-support-doesnt-exist/" target="_blank" rel="noreferrer">Open article</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <div class="t1" id="toastTitle">Saved</div>
+    <div class="t2" id="toastBody">Copied to clipboard.</div>
+  </div>
+
+<script>
+// Support Triage Studio — single-file web app
+// Designed as an interactive sandbox for triage policies + staffing/automation tradeoffs.
+// No external calls; everything is simulated locally.
+
+(function(){
+  "use strict";
+
+  // -------------------------------
+  // Utilities
+  // -------------------------------
+  const $ = (sel, el=document) => el.querySelector(sel);
+  const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const lerp = (a,b,t) => a + (b-a)*t;
+
+  function uid(){
+    return Math.random().toString(16).slice(2,8) + "-" + Math.random().toString(16).slice(2,8);
+  }
+
+  function fmt(n){
+    if (typeof n !== 'number' || Number.isNaN(n)) return "—";
+    return n.toLocaleString(undefined, {maximumFractionDigits: 0});
+  }
+
+  function fmt1(n){
+    if (typeof n !== 'number' || Number.isNaN(n)) return "—";
+    return n.toLocaleString(undefined, {maximumFractionDigits: 1});
+  }
+
+  function money(n){
+    if (typeof n !== 'number' || Number.isNaN(n)) return "—";
+    return n.toLocaleString(undefined, {style:"currency", currency:"USD", maximumFractionDigits:0});
+  }
+
+  function quantile(arr, q){
+    if (!arr.length) return NaN;
+    const a = [...arr].sort((x,y)=>x-y);
+    const pos = (a.length-1)*q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    return a[base+1] !== undefined ? lerp(a[base], a[base+1], rest) : a[base];
+  }
+
+  function safeJsonParse(s){
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+
+  function nowISO(){
+    return new Date().toISOString();
+  }
+
+  function toast(title, body){
+    const t = $('#toast');
+    $('#toastTitle').textContent = title;
+    $('#toastBody').textContent = body;
+    t.classList.add('show');
+    window.clearTimeout(toast._t);
+    toast._t = window.setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  async function copyText(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast('Copied', 'Copied to clipboard.');
+    }catch(e){
+      toast('Copy failed', 'Your browser blocked clipboard access.');
+    }
+  }
+
+  function download(filename, content, mime='application/json'){
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // -------------------------------
+  // Domain model: tickets + scoring
+  // -------------------------------
+
+  const TIER = {
+    free: {label:'Free', weight: 0.6, slaHrs: 96, baseMRR: 0},
+    pro: {label:'Pro', weight: 1.0, slaHrs: 48, baseMRR: 50},
+    team: {label:'Team', weight: 1.2, slaHrs: 24, baseMRR: 300},
+    enterprise: {label:'Enterprise', weight: 1.55, slaHrs: 8, baseMRR: 8000},
+  };
+
+  const TYPE = {
+    billing: {label:'Billing', urgency: 0.78, autoFit: 0.62},
+    outage: {label:'Outage', urgency: 0.92, autoFit: 0.40},
+    bug: {label:'Bug', urgency: 0.62, autoFit: 0.55},
+    security: {label:'Security', urgency: 0.98, autoFit: 0.30},
+    feature: {label:'Feature request', urgency: 0.35, autoFit: 0.75},
+    account: {label:'Account access', urgency: 0.85, autoFit: 0.58}
+  };
+
+  const WORDS = {
+    rage: ["refund","charged","chargeback","stolen","scam","cancel","lawsuit","unacceptable","fraud","angry","immediately","now","ridiculous","steal"],
+    capsPenalty: 0.08,
+    exclaimPenalty: 0.04,
+    pleaseBonus: 0.04,
+    thanksBonus: 0.05,
+  };
+
+  function messageSignals(msg){
+    const m = (msg||"").trim();
+    if (!m) return {rage:0, caps:0, exclaim:0, politeness:0};
+
+    const lower = m.toLowerCase();
+    let rage = 0;
+    for (const w of WORDS.rage){
+      if (lower.includes(w)) rage += 1;
+    }
+    rage = clamp(rage / 6, 0, 1);
+
+    const letters = m.replace(/[^A-Za-z]/g,'');
+    const upper = letters.replace(/[^A-Z]/g,'').length;
+    const caps = letters.length ? clamp(upper / letters.length, 0, 1) : 0;
+
+    const exclaim = clamp((m.match(/!/g)||[]).length / 6, 0, 1);
+
+    let politeness = 0;
+    if (lower.includes('please')) politeness += WORDS.pleaseBonus;
+    if (lower.includes('thanks') || lower.includes('thank you')) politeness += WORDS.thanksBonus;
+    politeness = clamp(politeness, 0, 0.12);
+
+    return {rage, caps, exclaim, politeness};
+  }
+
+  function scoreTicket(t){
+    // Inputs normalized 0..1
+    const tier = TIER[t.tier] || TIER.pro;
+    const type = TYPE[t.type] || TYPE.billing;
+
+    const ageN = clamp(t.ageHrs / 168, 0, 1); // 7 days
+    const spendN = clamp(t.spend / 20000, 0, 1);
+    const touchesN = clamp(t.touches / 12, 0, 1);
+
+    // Sentiment slider is calm->angry mapping, but we store as 0..100 (angry high)
+    let sentN = clamp(t.sentiment / 100, 0, 1);
+
+    // Message signals can override sentiment slightly
+    const sig = messageSignals(t.message);
+    sentN = clamp(sentN + sig.rage*0.18 + sig.caps*WORDS.capsPenalty + sig.exclaim*WORDS.exclaimPenalty - sig.politeness, 0, 1);
+
+    const urgency = clamp(type.urgency*0.55 + ageN*0.30 + sentN*0.22, 0, 1);
+
+    // Revenue and churn are not the same, but related
+    const mrr = Math.max(t.spend, tier.baseMRR);
+    const mrrN = clamp(mrr / 8000, 0, 1);
+
+    // churn probability: logistic-ish blend
+    const churn = clamp(
+      0.10 +
+      0.45*sentN +
+      0.20*ageN +
+      0.15*touchesN +
+      0.25*(type.label==='Billing' ? 1 : 0) +
+      0.15*(type.label==='Account access' ? 1 : 0) -
+      0.18*mrrN -
+      0.10*(tier.label==='Enterprise' ? 1 : 0),
+      0, 0.97
+    );
+
+    // SLA breach risk based on tier SLA hours
+    const sla = tier.slaHrs;
+    const breachP = clamp((t.ageHrs / Math.max(1,sla)) * 0.55 + sentN*0.18 + (type.label==='Outage' ? 0.15 : 0), 0, 1);
+
+    // Automation fit: issue type + message clarity heuristic
+    const clarity = clamp(1 - (sig.caps*0.35 + sig.exclaim*0.22 + sig.rage*0.25), 0, 1);
+    const autoFit = clamp(type.autoFit*0.72 + clarity*0.28, 0, 1);
+
+    // Priority is a tunable blend
+    const priority = clamp(
+      (urgency*0.55 + churn*0.35 + mrrN*0.25 + breachP*0.25) * 100,
+      0, 100
+    );
+
+    return {
+      priority,
+      churn,
+      breachP,
+      autoFit,
+      urgency,
+      mrr,
+      sentN,
+      sig
+    };
+  }
+
+  function slaBand(p){
+    if (!Number.isFinite(p)) return '—';
+    if (p < 0.35) return 'Low';
+    if (p < 0.65) return 'Medium';
+    return 'High';
+  }
+
+  function severityChip(t){
+    const s = t._score;
+    if (!s) return {cls:'purple', label:'Unscored'};
+    if (s.priority < 40) return {cls:'good', label:'Low priority'};
+    if (s.priority < 70) return {cls:'warn', label:'Medium priority'};
+    return {cls:'bad', label:'High priority'};
+  }
+
+  // -------------------------------
+  // Scenario state
+  // -------------------------------
+
+  const state = {
+    scenarioId: uid(),
+    policy: 'balanced',
+    tickets: [],
+    selectedId: null,
+    sim: {
+      agents: 6,
+      ahtMin: 14,
+      autoCoverage: 35,
+      autoReliability: 78,
+      escBudget: 10,
+      afterHours: 25,
+      scheduleText: "Mon: 6\nTue: 6\nWed: 6\nThu: 6\nFri: 6\nSat: 2\nSun: 2",
+    },
+    report: null,
+    log: [],
+    draft: "",
+  };
+
+  function seedTickets(){
+    const examples = [
+      {tier:'pro', type:'billing', sentiment: 72, ageHrs: 160, spend: 120, touches: 3, title:'Double-charged after upgrading', message:'I was charged twice and support has not responded for days. Please fix or I will cancel.'},
+      {tier:'enterprise', type:'account', sentiment: 55, ageHrs: 9, spend: 18000, touches: 1, title:'SSO login loop for admins', message:'Admin SSO loops back to login screen. Blocking access for finance approvals.'},
+      {tier:'team', type:'outage', sentiment: 65, ageHrs: 2, spend: 550, touches: 0, title:'API requests timing out', message:'Seeing intermittent 504s in production. Any status update?'},
+      {tier:'free', type:'feature', sentiment: 25, ageHrs: 72, spend: 0, touches: 0, title:'Please add CSV export', message:'CSV export would make it easier to try the product for my class. Thanks!'},
+      {tier:'pro', type:'bug', sentiment: 45, ageHrs: 36, spend: 60, touches: 1, title:'Invoice PDF missing VAT fields', message:'Invoice PDF is missing VAT fields. Need a corrected invoice for accounting.'},
+      {tier:'team', type:'billing', sentiment: 88, ageHrs: 220, spend: 320, touches: 5, title:'Refund requested for failed charge', message:'UNACCEPTABLE. Charged even though the service was down. Refund me NOW!!!'},
+      {tier:'enterprise', type:'security', sentiment: 40, ageHrs: 6, spend: 12000, touches: 0, title:'Report of exposed API key', message:'We detected a possible exposed key in logs. Need rotation guidance + incident confirmation.'},
+      {tier:'pro', type:'account', sentiment: 70, ageHrs: 48, spend: 95, touches: 2, title:'Locked out after card verification', message:'I cannot access my account after verifying payment method. Support please respond.'},
+    ];
+
+    state.tickets = examples.map(e => ({
+      id: uid(),
+      createdAt: nowISO(),
+      ...e,
+      status: 'open',
+      notes: ''
+    }));
+
+    scoreAll();
+    state.selectedId = state.tickets[0]?.id || null;
+  }
+
+  function scoreAll(){
+    state.tickets.forEach(t => t._score = scoreTicket(t));
+  }
+
+  // -------------------------------
+  // Policy: ranking function
+  // -------------------------------
+
+  function policyWeight(ticket, policy){
+    const s = ticket._score || scoreTicket(ticket);
+    const tier = TIER[ticket.tier] || TIER.pro;
+    const type = TYPE[ticket.type] || TYPE.billing;
+
+    const base = s.priority;
+
+    if (policy === 'balanced'){
+      return base;
+    }
+    if (policy === 'vip'){
+      const vip = (ticket.tier === 'enterprise' ? 28 : ticket.tier === 'team' ? 12 : 0);
+      return base + vip + (s.mrr/8000)*10;
+    }
+    if (policy === 'rage'){
+      return base + s.sentN*28 + (ticket.type==='billing' ? 8 : 0);
+    }
+    if (policy === 'churn'){
+      return base + s.churn*42 + (s.breachP*12);
+    }
+    if (policy === 'sla'){
+      const sla = tier.slaHrs;
+      const ageRatio = clamp(ticket.ageHrs / Math.max(1,sla), 0, 2);
+      return base + ageRatio*25 + (type.label==='Outage' ? 10 : 0);
+    }
+    return base;
+  }
+
+  function sortedOpenTickets(){
+    const open = state.tickets.filter(t => t.status === 'open');
+    return open.sort((a,b)=>{
+      const wa = policyWeight(a, state.policy);
+      const wb = policyWeight(b, state.policy);
+      if (wb !== wa) return wb - wa;
+      return (b.ageHrs - a.ageHrs);
+    });
+  }
+
+  // -------------------------------
+  // Rendering
+  // -------------------------------
+
+  function render(){
+    $('#scenarioId').textContent = state.scenarioId;
+
+    // KPIs
+    const open = state.tickets.filter(t=>t.status==='open');
+    $('#kBacklog').textContent = fmt(open.length);
+
+    if (state.report){
+      $('#kMedian').textContent = fmt1(state.report.medianResponseHrs);
+      $('#kTrust').textContent = fmt1(state.report.trustIndex);
+      $('#kRisk').textContent = money(state.report.revenueAtRisk);
+
+      setMeter($('#mOps'), state.report.opsHealth);
+      setMeter($('#mTrust'), state.report.trustIndex);
+      setMeter($('#mRev'), state.report.revenueProtection);
+    } else {
+      $('#kMedian').textContent = '—';
+      $('#kTrust').textContent = '—';
+      $('#kRisk').textContent = '—';
+      setMeter($('#mOps'), 50);
+      setMeter($('#mTrust'), 50);
+      setMeter($('#mRev'), 50);
+    }
+
+    // Control readouts
+    $('#cAgentsVal').textContent = state.sim.agents;
+    $('#cAhtVal').textContent = state.sim.ahtMin;
+    $('#cAutoCovVal').textContent = state.sim.autoCoverage;
+    $('#cAutoRelVal').textContent = state.sim.autoReliability;
+    $('#cEscVal').textContent = state.sim.escBudget;
+    $('#cAfterVal').textContent = state.sim.afterHours;
+    $('#cSchedule').value = state.sim.scheduleText;
+
+    // Tabs
+    $$('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.policy === state.policy));
+
+    // Queue list
+    const q = $('#queue');
+    q.innerHTML = '';
+
+    const term = ($('#search').value||'').trim().toLowerCase();
+    const tickets = sortedOpenTickets().filter(t => {
+      if (!term) return true;
+      const blob = `${t.title} ${t.message} ${t.tier} ${t.type}`.toLowerCase();
+      return blob.includes(term);
+    });
+
+    if (!tickets.length){
+      const empty = document.createElement('div');
+      empty.className = 'help';
+      empty.textContent = term ? 'No tickets match your search.' : 'No open tickets in the queue.';
+      q.appendChild(empty);
+    }
+
+    for (const t of tickets){
+      const el = document.createElement('div');
+      el.className = 'ticket';
+      el.dataset.id = t.id;
+      el.tabIndex = 0;
+
+      const s = t._score;
+      const sev = severityChip(t);
+
+      el.innerHTML = `
+        <div class="main">
+          <div class="t-title">${escapeHtml(t.title)}</div>
+          <div class="t-desc">${escapeHtml(t.message.slice(0, 120))}${t.message.length>120?'…':''}</div>
+          <div class="chips">
+            <span class="chip purple">${escapeHtml(TIER[t.tier].label)}</span>
+            <span class="chip">${escapeHtml(TYPE[t.type].label)}</span>
+            <span class="chip ${sev.cls}">${sev.label}</span>
+            <span class="chip">Age: ${fmt1(t.ageHrs)}h</span>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="badge">Priority <b style="opacity:.9">${fmt1(s.priority)}</b></span>
+          <span class="badge">Churn <b style="opacity:.9">${fmt1(s.churn*100)}%</b></span>
+          <span class="badge">MRR <b style="opacity:.9">${money(s.mrr)}</b></span>
+          <button class="primary" data-act="select">Inspect</button>
+        </div>
+      `;
+
+      if (t.id === state.selectedId){
+        el.style.borderColor = 'rgba(124,92,255,.45)';
+        el.style.background = 'rgba(124,92,255,.10)';
+      }
+
+      q.appendChild(el);
+    }
+
+    // Inspector
+    const sel = state.tickets.find(t=>t.id===state.selectedId) || open[0] || null;
+    if (!sel){
+      $('#fMsg').value = '';
+      $('#xPriority').textContent = '—';
+      $('#xChurn').textContent = '—';
+      $('#xSla').textContent = '—';
+      $('#xAuto').textContent = '—';
+    } else {
+      hydrateInspector(sel);
+    }
+
+    // log
+    $('#log').textContent = state.log.join('\n');
+    $('#draft').textContent = state.draft || '—';
+  }
+
+  function setMeter(el, value0to100){
+    const v = clamp(value0to100, 0, 100);
+    el.style.width = v + '%';
+  }
+
+  function hydrateInspector(t){
+    $('#fTier').value = t.tier;
+    $('#fType').value = t.type;
+    $('#fSent').value = t.sentiment;
+    $('#fAge').value = t.ageHrs;
+    $('#fSpend').value = t.spend;
+    $('#fTouches').value = t.touches;
+    $('#fMsg').value = t.message;
+
+    // Derived readouts
+    const s = scoreTicket({...t, message: $('#fMsg').value});
+    $('#xPriority').textContent = fmt1(s.priority);
+    $('#xChurn').textContent = fmt1(s.churn*100) + '%';
+    $('#xSla').textContent = slaBand(s.breachP);
+    $('#xAuto').textContent = fmt1(s.autoFit*100) + '%';
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[c]));
+  }
+
+  // -------------------------------
+  // Ticket operations
+  // -------------------------------
+
+  function selectTicket(id){
+    state.selectedId = id;
+    render();
+  }
+
+  function addTicket(){
+    const t = {
+      id: uid(),
+      createdAt: nowISO(),
+      title: 'New ticket',
+      message: 'Describe the issue…',
+      tier: 'pro',
+      type: 'billing',
+      sentiment: 50,
+      ageHrs: 0,
+      spend: 50,
+      touches: 0,
+      status: 'open',
+      notes: ''
+    };
+    state.tickets.unshift(t);
+    scoreAll();
+    state.selectedId = t.id;
+    toast('Ticket added', 'Edit details in the inspector, then Apply.');
+    render();
+  }
+
+  function applyInspector(){
+    const t = state.tickets.find(x=>x.id===state.selectedId);
+    if (!t) return;
+
+    t.tier = $('#fTier').value;
+    t.type = $('#fType').value;
+    t.sentiment = +$('#fSent').value;
+    t.ageHrs = +$('#fAge').value;
+    t.spend = +$('#fSpend').value;
+    t.touches = +$('#fTouches').value;
+    t.message = $('#fMsg').value;
+
+    t._score = scoreTicket(t);
+
+    toast('Applied', 'Ticket scores updated.');
+    render();
+  }
+
+  function resolveSelected(){
+    const t = state.tickets.find(x=>x.id===state.selectedId);
+    if (!t) return;
+    t.status = 'resolved';
+    state.selectedId = state.tickets.find(x=>x.status==='open')?.id || null;
+    toast('Resolved', 'Ticket removed from queue.');
+    render();
+  }
+
+  // -------------------------------
+  // Auto-triage: simulate an LLM classifier
+  // -------------------------------
+
+  function autoTriage(){
+    // Use the scenario's automation reliability and coverage to decide which tickets get re-labeled.
+    const cov = state.sim.autoCoverage / 100;
+    const rel = state.sim.autoReliability / 100;
+
+    let changed = 0;
+    for (const t of state.tickets){
+      if (t.status !== 'open') continue;
+      if (Math.random() > cov) continue;
+
+      // We attempt to infer type from message
+      const infer = inferTypeFromMessage(t.message);
+      const correct = Math.random() < rel;
+      const newType = correct ? infer : randomTypeExcept(infer);
+
+      if (newType !== t.type){
+        t.type = newType;
+        changed++;
+      }
+
+      // We also add a touch because the user experiences an automated response
+      t.touches = clamp(t.touches + 1, 0, 12);
+      t._score = scoreTicket(t);
+    }
+
+    toast('Auto-triage complete', `${changed} tickets re-labeled; all touched tickets incremented.`);
+    render();
+  }
+
+  function inferTypeFromMessage(msg){
+    const m = (msg||'').toLowerCase();
+    const has = (w)=>m.includes(w);
+
+    if (has('refund') || has('charged') || has('invoice') || has('billing') || has('card')) return 'billing';
+    if (has('down') || has('timeout') || has('504') || has('outage') || has('status')) return 'outage';
+    if (has('leak') || has('key') || has('breach') || has('security')) return 'security';
+    if (has('login') || has('locked') || has('sso') || has('access')) return 'account';
+    if (has('feature') || has('add') || has('request')) return 'feature';
+    return 'bug';
+  }
+
+  function randomTypeExcept(except){
+    const keys = Object.keys(TYPE).filter(k=>k!==except);
+    return keys[Math.floor(Math.random()*keys.length)];
+  }
+
+  // -------------------------------
+  // Simulation engine (7 days)
+  // -------------------------------
+
+  function parseSchedule(text){
+    // Returns map dayIndex->agents (Mon=0)
+    const lines = (text||'').split('\n').map(l=>l.trim()).filter(Boolean);
+    const map = new Map();
+    const keyOf = (d)=>({mon:0,tue:1,wed:2,thu:3,fri:4,sat:5,sun:6}[d]);
+
+    for (const line of lines){
+      const m = line.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s*:\s*(\d+)$/i);
+      if (!m) continue;
+      const k = keyOf(m[1].slice(0,3).toLowerCase());
+      map.set(k, clamp(+m[2], 0, 48));
+    }
+    return map;
+  }
+
+  function runSimulation(){
+    // snapshot base
+    state.log = [];
+    state.report = null;
+
+    // Update sim schedule text from textarea
+    state.sim.scheduleText = $('#cSchedule').value;
+
+    scoreAll();
+
+    const schedule = parseSchedule(state.sim.scheduleText);
+    const baseAgents = state.sim.agents;
+    const aht = state.sim.ahtMin; // minutes
+    const escBudget = state.sim.escBudget/100;
+    const after = state.sim.afterHours/100;
+
+    const cov = state.sim.autoCoverage/100;
+    const rel = state.sim.autoReliability/100;
+
+    // Simulation constants
+    const days = 7;
+    const hoursPerDay = 24;
+    const tick = 1; // hour step
+
+    // Demand model: new arrivals per day around current backlog
+    const openNow = state.tickets.filter(t=>t.status==='open').length;
+    const baseArrivalsPerDay = clamp(Math.round(6 + openNow*0.55), 6, 45);
+
+    // Service capacity: agents * 60 / aht tickets per hour
+    const basePerHour = (baseAgents * 60) / Math.max(1,aht);
+
+    // Keep internal arrays of response times for resolved tickets in sim window
+    const responseTimes = [];
+
+    // Copy tickets into a simulated queue representation
+    const simTickets = state.tickets
+      .filter(t=>t.status==='open')
+      .map(t => ({...deepClone(t), ageHrs: t.ageHrs, createdAt: t.createdAt, _score: scoreTicket(t)}));
+
+    // Trust model
+    let trust = 72; // starting index
+    let revenueAtRisk = 0;
+
+    // Helper: add arrivals
+    const addArrivals = (dayIndex) => {
+      // weekend dip
+      const weekendFactor = (dayIndex>=5) ? 0.65 : 1.0;
+      const mean = baseArrivalsPerDay * weekendFactor;
+      const n = poisson(mean);
+
+      for (let i=0;i<n;i++){
+        const t = randomArrivalTicket();
+        // Some new tickets get auto-triaged
+        if (Math.random() < cov){
+          const inferred = inferTypeFromMessage(t.message);
+          const correct = Math.random() < rel;
+          t.type = correct ? inferred : randomTypeExcept(inferred);
+          t.touches = clamp(t.touches + 1, 0, 12);
+        }
+        t._score = scoreTicket(t);
+        simTickets.push(t);
+      }
+
+      log(`Day ${dayName(dayIndex)}: ${n} new tickets arrived.`);
+    };
+
+    // Helper: resolve capacity each hour
+    const resolveHour = (dayIndex, hourOfDay) => {
+      const dow = dayIndex % 7;
+      const agentsToday = schedule.has(dow) ? schedule.get(dow) : baseAgents;
+
+      // assume after-hours is hours 18..8
+      const isAfter = (hourOfDay < 9 || hourOfDay >= 18);
+      const cap = basePerHour * (agentsToday/baseAgents) * (isAfter ? after : 1);
+
+      // reserve escalation budget for high-risk tickets
+      const escCap = cap * escBudget;
+      const normalCap = Math.max(0, cap - escCap);
+
+      let resolved = 0;
+
+      // Sort by policy
+      simTickets.sort((a,b)=>policyWeight(b, state.policy) - policyWeight(a, state.policy));
+
+      // Resolve escalations first: high churn or security/outage
+      const escalations = simTickets.filter(t => t.status==='open' && (t._score.churn>0.55 || t.type==='security' || t.type==='outage'));
+      const normals = simTickets.filter(t => t.status==='open' && !(t._score.churn>0.55 || t.type==='security' || t.type==='outage'));
+
+      const take = (list, capacity) => {
+        let left = capacity;
+        for (const t of list){
+          if (left < 1) break;
+          // each ticket consumes 1 unit
+          t.status = 'resolved';
+          t.resolvedAtHrs = t.ageHrs;
+          responseTimes.push(t.ageHrs);
+          // trust impact: delays and anger reduce trust more
+          const delayPenalty = clamp((t.ageHrs / Math.max(1, TIER[t.tier].slaHrs)) - 0.8, 0, 2);
+          trust -= delayPenalty*3.2;
+          trust -= t._score.sentN*0.9;
+          trust += 0.35; // satisfaction from resolution
+
+          // revenue at risk accumulates from churn probability * mrr
+          revenueAtRisk += (t._score.churn * t._score.mrr) * 0.15;
+
+          resolved++;
+          left -= 1;
+        }
+      };
+
+      take(escalations, Math.floor(escCap));
+      take(normals, Math.floor(normalCap));
+
+      if (resolved>0 && (hourOfDay===10 || hourOfDay===16)){
+        log(`  ${dayName(dayIndex)} ${pad2(hourOfDay)}:00 — resolved ${resolved} tickets (cap ${cap.toFixed(1)}/h).`);
+      }
+    };
+
+    // Helper: age tickets each hour
+    const ageHour = () => {
+      for (const t of simTickets){
+        if (t.status !== 'open') continue;
+        t.ageHrs += tick;
+        // if we send automated "we got your message" responses, add touches occasionally
+        if (Math.random() < 0.012){
+          t.touches = clamp(t.touches+1, 0, 12);
+        }
+        t._score = scoreTicket(t);
+      }
+    };
+
+    // Main loop
+    for (let d=0; d<days; d++){
+      addArrivals(d);
+
+      for (let h=0; h<hoursPerDay; h++){
+        // minor trust decay if backlog is huge
+        const openCount = simTickets.filter(t=>t.status==='open').length;
+        if (openCount > 60) trust -= 0.08;
+        if (openCount > 90) trust -= 0.16;
+
+        resolveHour(d,h);
+        ageHour();
+      }
+
+      // end-of-day trust correction
+      trust = clamp(trust, 5, 95);
+      log(`End of ${dayName(d)}: open=${simTickets.filter(t=>t.status==='open').length}, trust=${trust.toFixed(1)}.`);
+    }
+
+    const openLeft = simTickets.filter(t=>t.status==='open').length;
+    const median = quantile(responseTimes, 0.5);
+
+    const opsHealth = clamp(100 - openLeft*1.2 - (Number.isFinite(median)? median*0.35 : 20), 0, 100);
+    const trustIndex = clamp(trust, 0, 100);
+    const revenueProtection = clamp(100 - (revenueAtRisk/2000), 0, 100);
+
+    state.report = {
+      date: new Date().toISOString().slice(0,10),
+      scenarioId: state.scenarioId,
+      policy: state.policy,
+      inputs: {...deepClone(state.sim)},
+      startingBacklog: openNow,
+      baseArrivalsPerDay,
+      medianResponseHrs: Number.isFinite(median) ? +median.toFixed(1) : NaN,
+      openRemaining: openLeft,
+      trustIndex: +trustIndex.toFixed(1),
+      opsHealth: +opsHealth.toFixed(1),
+      revenueAtRisk: Math.round(revenueAtRisk),
+      revenueProtection: +revenueProtection.toFixed(1),
+      responseSamples: responseTimes.slice(0, 240),
+      log: state.log.slice(0, 500)
+    };
+
+    toast('Simulation complete', 'Scorecard updated. Generate a share post if you like.');
+    render();
+  }
+
+  // -------------------------------
+  // Random generators
+  // -------------------------------
+
+  function deepClone(o){
+    return JSON.parse(JSON.stringify(o));
+  }
+
+  function dayName(idx){
+    return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx%7];
+  }
+
+  function pad2(n){
+    return String(n).padStart(2,'0');
+  }
+
+  function poisson(lambda){
+    // Knuth
+    const L = Math.exp(-lambda);
+    let k = 0;
+    let p = 1;
+    do {
+      k++;
+      p *= Math.random();
+    } while (p > L);
+    return k - 1;
+  }
+
+  function randomChoice(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function randomArrivalTicket(){
+    const tiers = ['free','pro','team','enterprise'];
+    const types = ['billing','outage','bug','security','feature','account'];
+
+    const tier = weightedPick([
+      ['free',0.40],
+      ['pro',0.36],
+      ['team',0.18],
+      ['enterprise',0.06],
+    ]);
+
+    const type = weightedPick([
+      ['billing',0.32],
+      ['account',0.18],
+      ['bug',0.20],
+      ['outage',0.14],
+      ['feature',0.10],
+      ['security',0.06],
+    ]);
+
+    const angry = clamp(randn(55, 18), 0, 100);
+    const spend = tier==='enterprise' ? Math.round(randn(14000, 3800)) :
+                  tier==='team' ? Math.round(randn(400, 220)) :
+                  tier==='pro' ? Math.round(randn(80, 60)) : 0;
+
+    const title = synthTitle(type, tier);
+    const message = synthMessage(type, angry);
+
+    return {
+      id: uid(),
+      createdAt: nowISO(),
+      title,
+      message,
+      tier,
+      type,
+      sentiment: Math.round(angry),
+      ageHrs: 0,
+      spend: clamp(spend, 0, 20000),
+      touches: Math.round(clamp(randn(0.6, 1.2), 0, 6)),
+      status: 'open',
+      notes: ''
+    };
+  }
+
+  function weightedPick(pairs){
+    const total = pairs.reduce((a,[,w])=>a+w,0);
+    let r = Math.random()*total;
+    for (const [k,w] of pairs){
+      r -= w;
+      if (r <= 0) return k;
+    }
+    return pairs[pairs.length-1][0];
+  }
+
+  function randn(mu, sigma){
+    // Box-Muller
+    let u=0,v=0;
+    while(u===0) u=Math.random();
+    while(v===0) v=Math.random();
+    const z = Math.sqrt(-2.0*Math.log(u)) * Math.cos(2.0*Math.PI*v);
+    return mu + z*sigma;
+  }
+
+  function synthTitle(type, tier){
+    const t = TYPE[type]?.label || 'Issue';
+    const a = {
+      billing: ['Unexpected charge', 'Invoice mismatch', 'Refund request', 'Card declined but charged', 'Billing portal confusion'],
+      outage: ['Service down', 'API timeouts', 'High error rate', 'Streaming stalled', 'Status page mismatch'],
+      bug: ['UI broken on mobile', 'Export fails', 'Webhook retries loop', 'Incorrect totals', 'Crash on submit'],
+      security: ['Possible key exposure', 'Suspicious login', 'Need SOC2 evidence', 'Report vulnerability', 'Request audit log'],
+      feature: ['Request: better roles', 'Feature idea: tagging', 'Need bulk export', 'Add SSO for teams', 'Improve search'],
+      account: ['Locked out', 'SSO not working', 'Email change needed', '2FA reset', 'Cannot verify account'],
+    };
+    const b = a[type] || ['Help needed'];
+    const prefix = (tier==='enterprise') ? 'Escalation: ' : '';
+    return prefix + randomChoice(b);
+  }
+
+  function synthMessage(type, angry){
+    const calm = angry < 45;
+    const mid = angry >=45 && angry < 75;
+    const rage = angry >= 75;
+
+    const base = {
+      billing: [
+        'I think I was charged incorrectly. Can you check this invoice?',
+        'Billing portal shows an extra charge — please clarify what it is for.',
+        'We upgraded but the invoice doesn\'t match the plan. Need a corrected invoice.'
+      ],
+      outage: [
+        'We are seeing timeouts in production. Is there an incident?',
+        'Service appears down for our region. Any ETA?',
+        'Error rate spiked and our jobs are failing.'
+      ],
+      bug: [
+        'Export fails with an error. Steps: click export → spinner → error.',
+        'UI is broken on mobile for the settings page.',
+        'Webhook retries are duplicating events.'
+      ],
+      security: [
+        'We need guidance on rotating keys and confirming if there was an incident.',
+        'Suspicious login detected. Please advise on account security actions.',
+        'We found a potential vulnerability. Who can we contact?'
+      ],
+      feature: [
+        'Feature request: please add tagging to organize tickets.',
+        'Would love a bulk export option for our reports.',
+        'Could you add role-based permissions for teams?'
+      ],
+      account: [
+        'I\'m locked out and cannot complete verification. Please help.',
+        'SSO login loops. Need assistance configuring IdP settings.',
+        'Need to reset 2FA; lost device.'
+      ]
+    };
+
+    let msg = randomChoice(base[type] || ['Please help.']);
+
+    if (mid){
+      msg += ' We have been waiting for a response.';
+    }
+
+    if (rage){
+      msg = msg.toUpperCase();
+      msg += ' THIS IS UNACCEPTABLE!!! REFUND ME NOW!';
+    }
+
+    if (calm){
+      msg += ' Thanks!';
+    }
+
+    return msg;
+  }
+
+  // -------------------------------
+  // Logging helpers
+  // -------------------------------
+
+  function log(line){
+    state.log.push(line);
+    if (state.log.length > 500) state.log = state.log.slice(-500);
+  }
+
+  // -------------------------------
+  // Export / import
+  // -------------------------------
+
+  function exportScenario(){
+    const payload = {
+      version: 1,
+      exportedAt: nowISO(),
+      scenarioId: state.scenarioId,
+      policy: state.policy,
+      tickets: state.tickets.map(t => {
+        const { _score, ...rest } = t;
+        return rest;
+      }),
+      sim: deepClone(state.sim),
+      report: state.report ? deepClone(state.report) : null
+    };
+    download(`support-triage-scenario-${state.scenarioId}.json`, JSON.stringify(payload, null, 2));
+    toast('Exported', 'Scenario JSON downloaded.');
+  }
+
+  function importScenario(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const data = safeJsonParse(text);
+      if (!data || !data.tickets || !data.sim){
+        toast('Import failed', 'Not a valid scenario file.');
+        return;
+      }
+      state.scenarioId = data.scenarioId || uid();
+      state.policy = data.policy || 'balanced';
+      state.tickets = (data.tickets||[]).map(t=>({
+        ...t,
+        status: t.status || 'open',
+        createdAt: t.createdAt || nowISO()
+      }));
+      state.sim = {...state.sim, ...data.sim};
+      state.report = data.report || null;
+      scoreAll();
+      state.selectedId = state.tickets.find(t=>t.status==='open')?.id || null;
+      state.log = (state.report && state.report.log) ? state.report.log.slice(0, 500) : [];
+      toast('Imported', 'Scenario loaded.');
+      render();
+    };
+    input.click();
+  }
+
+  // -------------------------------
+  // Share draft
+  // -------------------------------
+
+  function generateDraft(){
+    if (!state.report){
+      state.draft = "Run a simulation first, then generate a post.";
+      render();
+      return;
+    }
+
+    const r = state.report;
+    const policy = {
+      balanced: 'balanced triage',
+      vip: 'VIP-first triage',
+      rage: 'angry-customer triage',
+      churn: 'churn-risk triage',
+      sla: 'SLA-first triage'
+    }[r.policy] || r.policy;
+
+    const line1 = `Built a tiny support-ops simulator for the AI era: ${policy}.`;
+    const line2 = `7-day sim → median response ${fmt1(r.medianResponseHrs)}h, open backlog ${fmt(r.openRemaining)}, trust ${fmt1(r.trustIndex)}/100.`;
+    const line3 = `Revenue at risk: ${money(r.revenueAtRisk)} (synthetic model).`;
+
+    const take = suggestTakeaway(r);
+
+    state.draft = `${line1}\n\n${line2}\n${line3}\n\nTakeaway: ${take}\n\nTry it: tune staffing + automation reliability, then compare scenarios.`;
+    toast('Draft generated', 'Copy when ready.');
+    render();
+  }
+
+  function suggestTakeaway(r){
+    if (r.openRemaining > 70 && r.trustIndex < 55) return 'Backlog kills trust faster than any single bad answer—invest in capacity before automation.';
+    if (r.medianResponseHrs > 72) return 'Response time is a product metric; long queues become churn engines.';
+    if (r.revenueAtRisk > 2500) return 'Revenue protection needs fast billing + access support, not just outage response.';
+    if (r.trustIndex > 75 && r.openRemaining < 30) return 'A small after-hours budget plus sane triage can outperform aggressive automation.';
+    return 'The best triage policy depends on your constraints; measure trust impact, not just throughput.';
+  }
+
+  // -------------------------------
+  // Presets
+  // -------------------------------
+
+  function applyPreset(name){
+    const presets = {
+      understaffed: {
+        sim: {agents: 3, ahtMin: 18, autoCoverage: 20, autoReliability: 70, escBudget: 6, afterHours: 10},
+        policy: 'balanced'
+      },
+      autopilot: {
+        sim: {agents: 5, ahtMin: 13, autoCoverage: 65, autoReliability: 72, escBudget: 8, afterHours: 20},
+        policy: 'balanced'
+      },
+      viponly: {
+        sim: {agents: 6, ahtMin: 14, autoCoverage: 30, autoReliability: 78, escBudget: 18, afterHours: 25},
+        policy: 'vip'
+      },
+      sla: {
+        sim: {agents: 7, ahtMin: 12, autoCoverage: 35, autoReliability: 84, escBudget: 10, afterHours: 35},
+        policy: 'sla'
+      }
+    };
+
+    const p = presets[name];
+    if (!p) return;
+
+    state.policy = p.policy;
+    state.sim = {...state.sim, ...p.sim};
+    $('#cAgents').value = state.sim.agents;
+    $('#cAht').value = state.sim.ahtMin;
+    $('#cAutoCov').value = state.sim.autoCoverage;
+    $('#cAutoRel').value = state.sim.autoReliability;
+    $('#cEsc').value = state.sim.escBudget;
+    $('#cAfter').value = state.sim.afterHours;
+
+    toast('Preset applied', name);
+    render();
+  }
+
+  // -------------------------------
+  // Wiring
+  // -------------------------------
+
+  function bind(){
+    // Queue click
+    $('#queue').addEventListener('click', (e)=>{
+      const btn = e.target.closest('button');
+      const ticketEl = e.target.closest('.ticket');
+      if (!ticketEl) return;
+      const id = ticketEl.dataset.id;
+      if (btn && btn.dataset.act==='select'){
+        selectTicket(id);
+      } else {
+        selectTicket(id);
+      }
+    });
+
+    $('#queue').addEventListener('keydown', (e)=>{
+      if (e.key==='Enter' || e.key===' '){
+        const ticketEl = e.target.closest('.ticket');
+        if (!ticketEl) return;
+        e.preventDefault();
+        selectTicket(ticketEl.dataset.id);
+      }
+    });
+
+    // Tabs
+    $$('.tab').forEach(tab => {
+      tab.addEventListener('click', ()=>{
+        state.policy = tab.dataset.policy;
+        toast('Policy set', `${tab.textContent} triage`);
+        render();
+      });
+      tab.addEventListener('keydown', (e)=>{
+        if (e.key==='Enter' || e.key===' '){
+          e.preventDefault();
+          state.policy = tab.dataset.policy;
+          toast('Policy set', `${tab.textContent} triage`);
+          render();
+        }
+      });
+    });
+
+    // Inspector live update (doesn't write until Apply)
+    const inspectorInputs = ['#fTier','#fType','#fSent','#fAge','#fSpend','#fTouches','#fMsg'];
+    inspectorInputs.forEach(sel => {
+      $(sel).addEventListener('input', ()=>{
+        const t = state.tickets.find(x=>x.id===state.selectedId);
+        if (!t) return;
+        const draft = {
+          ...t,
+          tier: $('#fTier').value,
+          type: $('#fType').value,
+          sentiment: +$('#fSent').value,
+          ageHrs: +$('#fAge').value,
+          spend: +$('#fSpend').value,
+          touches: +$('#fTouches').value,
+          message: $('#fMsg').value,
+        };
+        const s = scoreTicket(draft);
+        $('#xPriority').textContent = fmt1(s.priority);
+        $('#xChurn').textContent = fmt1(s.churn*100) + '%';
+        $('#xSla').textContent = slaBand(s.breachP);
+        $('#xAuto').textContent = fmt1(s.autoFit*100) + '%';
+      });
+    });
+
+    // Search
+    $('#search').addEventListener('input', ()=>render());
+    $('#btnClear').addEventListener('click', ()=>{ $('#search').value=''; render(); $('#search').focus(); });
+
+    // Buttons
+    $('#btnAdd').addEventListener('click', addTicket);
+    $('#btnApply').addEventListener('click', applyInspector);
+    $('#btnResolve').addEventListener('click', resolveSelected);
+    $('#btnAuto').addEventListener('click', autoTriage);
+
+    $('#btnRun').addEventListener('click', runSimulation);
+
+    $('#btnExport').addEventListener('click', exportScenario);
+    $('#btnImport').addEventListener('click', importScenario);
+
+    $('#btnCopyLog').addEventListener('click', ()=>copyText(state.log.join('\n')));
+
+    $('#btnDownload').addEventListener('click', ()=>{
+      if (!state.report){
+        toast('Nothing to download', 'Run a simulation first.');
+        return;
+      }
+      const r = state.report;
+      download(`support-triage-report-${r.date}-${r.scenarioId}.json`, JSON.stringify(r, null, 2));
+      toast('Downloaded', 'Report JSON saved.');
+    });
+
+    $('#btnDraft').addEventListener('click', generateDraft);
+    $('#btnCopyDraft').addEventListener('click', ()=>copyText(state.draft || ''));
+
+    $('#btnSeed').addEventListener('click', ()=>{
+      state.scenarioId = uid();
+      state.policy = 'balanced';
+      state.report = null;
+      state.log = [];
+      state.draft = '';
+      seedTickets();
+      toast('New scenario', 'Seeded tickets + reset scorecard.');
+      render();
+    });
+
+    // Presets
+    $$('button[data-preset]').forEach(b=>b.addEventListener('click', ()=>applyPreset(b.dataset.preset)));
+
+    // Policy lab controls
+    const bindRange = (id, key) => {
+      $(id).addEventListener('input', ()=>{
+        state.sim[key] = +$(id).value;
+        render();
+      });
+    };
+
+    bindRange('#cAgents','agents');
+    bindRange('#cAht','ahtMin');
+    bindRange('#cAutoCov','autoCoverage');
+    bindRange('#cAutoRel','autoReliability');
+    bindRange('#cEsc','escBudget');
+    bindRange('#cAfter','afterHours');
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e)=>{
+      if ((e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) && e.key !== 'Escape'){
+        // allow typing
+      } else {
+        if (e.key === 'r' || e.key === 'R'){
+          e.preventDefault();
+          runSimulation();
+        }
+        if (e.key === 'n' || e.key === 'N'){
+          e.preventDefault();
+          $('#btnSeed').click();
+        }
+        if (e.key === '/'){
+          e.preventDefault();
+          $('#search').focus();
+        }
+      }
+      if (e.key === 'Escape'){
+        $('#search').blur();
+      }
+    });
+  }
+
+  // -------------------------------
+  // Init
+  // -------------------------------
+
+  function init(){
+    // seed tickets and bind controls
+    seedTickets();
+
+    // init controls from state
+    $('#cAgents').value = state.sim.agents;
+    $('#cAht').value = state.sim.ahtMin;
+    $('#cAutoCov').value = state.sim.autoCoverage;
+    $('#cAutoRel').value = state.sim.autoReliability;
+    $('#cEsc').value = state.sim.escBudget;
+    $('#cAfter').value = state.sim.afterHours;
+
+    bind();
+    render();
+    log('Ready. Click Run simulation to model 7 days.');
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
